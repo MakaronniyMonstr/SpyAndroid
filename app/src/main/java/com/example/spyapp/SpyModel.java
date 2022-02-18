@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.util.List;
 
+// Модель данных, которая будет серилизоваться в формат JSON
 @Data
 public class SpyModel {
     private String version;
